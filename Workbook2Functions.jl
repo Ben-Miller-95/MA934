@@ -16,13 +16,19 @@ end
 
 function search(list::Nullable{LList}, k::Int64)
     if(isnull(list))
-        return
-        
+        return       
     elseif((get(list).data).key == k)
-        println(get(list).data)
-        
+        # Better to have the search function return the key-value pair rather than just printing the value
+        #println(get(list).data)
+        #
+        # Like this:
+        return get(list).data
     else 
-        get(list).next = search(get(list).next, k)
+        #This line is probably the problem: you are overwriting the list as you search it:
+        #get(list).next = search(get(list).next, k)
+        #
+        # Try this instead:
+        return search(get(list).next, k)
     end
 end
 
@@ -47,6 +53,31 @@ function costsearch(z)
             time2[k] = (@timed search(list, k))[2]
         end
         time[i] = mean(time2)
+    end
+    return time
+end
+
+function costsearch2(z)
+    x = 1:z
+    x = 100*x
+    time = zeros(length(x))
+    nsamples=1000
+    #len = length(x)
+    for i = 1:length(x)
+        len = x[i]
+        time2 = zeros(nsamples)
+        y = rand(len)
+        values = Array{KVPair}(len)
+        for j in 1:len
+         values[j] = KVPair(j,y[i])
+        end
+        list = Nullable{LList}()
+        list = buildLList(values)
+        searchkey = Array{Int64}(ceil.(rand(nsamples)*len))
+        t = @timed for k = 1:nsamples
+            search(list, searchkey[k])
+        end
+        time[i] = t[2]
     end
     return time
 end
